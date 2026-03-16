@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<!-- Puro Español — Spanish-language streaming content finder for Latin American Spanish learners. -->
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Puro Español</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:       #1D9E75;
+      --accent-dark:  #157a5a;
+      --bg:           #0f1117;
+      --surface:      #1a1d27;
+      --surface2:     #22263a;
+      --border:       #2e3347;
+      --text:         #e8eaf0;
+      --text-muted:   #8890a8;
+      --badge-es:      #7c3aed;   /* purple  — ES original */
+      --badge-dub:     #0d9488;   /* teal    — dubbed      */
+      --badge-unknown: #64748b;   /* slate   — unknown     */
+      --badge-free:    #16a34a;   /* green   — free        */
+      --card-w:       154px;
+      --card-h:       231px;     /* ~2:3 poster ratio */
+      --radius:       8px;
+      --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Header ── */
+    header {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .site-title {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+
+    .site-tagline {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 2px;
+    }
+
+    /* ── Controls ── */
+    .controls {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .controls-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Service tabs */
+    .service-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .service-tab {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .service-tab:hover {
+      color: var(--text);
+    }
+
+    .service-tab.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* Filter row */
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .filter-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .filter-select {
+      flex: 1 1 140px;
+      padding: 8px 32px 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 0.85rem;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238890a8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+
+    .filter-select:focus { outline: none; border-color: var(--accent); }
+
+    /* ── Main content ── */
+    main {
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+    }
+
+    /* ── Section ── */
+    .content-section {
+      margin-bottom: 48px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .section-title .count {
+      color: var(--text-muted);
+      font-weight: 400;
+      font-size: 0.9rem;
+      margin-left: 8px;
+    }
+
+    /* ── Carousel wrapper ── */
+    .carousel-outer {
+      position: relative;
+    }
+
+    .carousel-track {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      padding-bottom: 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      -webkit-overflow-scrolling: touch;
+      align-items: flex-start;
+    }
+
+    .carousel-track::-webkit-scrollbar { height: 5px; }
+    .carousel-track::-webkit-scrollbar-track { background: transparent; }
+    .carousel-track::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    /* Scroll buttons */
+    .scroll-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 1.1rem;
+      cursor: pointer;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+      transition: background 0.15s;
+      opacity: 0;
+      pointer-events: none;
+      padding-bottom: 8px; /* account for scrollbar padding */
+    }
+
+    .carousel-outer:hover .scroll-btn { opacity: 1; pointer-events: auto; }
+    .scroll-btn:hover { background: var(--accent); }
+    .scroll-btn.left  { left: -14px; }
+    .scroll-btn.right { right: -14px; }
+
+    /* ── Card wrapper (poster + title below) ── */
+    .card-wrap {
+      flex: 0 0 var(--card-w);
+      width: var(--card-w);
+      cursor: default;
+    }
+
+    .card-title-label {
+      margin-top: 6px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Poster Card ── */
+    .poster-card {
+      width: 100%;
+      height: var(--card-h);
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: relative;
+      background: var(--surface2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card-wrap:hover .poster-card {
+      transform: scale(1.04);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+      z-index: 5;
+    }
+
+    .poster-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Poster placeholder when no image */
+    .poster-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      text-align: center;
+      padding: 10px;
+    }
+
+    .poster-placeholder .placeholder-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      opacity: 0.4;
+    }
+
+    /* Corner language badge */
+    .lang-badge {
+      position: absolute;
+      top: 7px;
+      left: 7px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 4px;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .lang-badge.es-original { background: var(--badge-es); color: #fff; }
+    .lang-badge.dubbed      { background: var(--badge-dub); color: #fff; }
+    .lang-badge.unknown     { background: var(--badge-unknown); color: #fff; }
+
+
+    /* ── Hover Overlay ── */
+    .card-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 12, 20, 0.88);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 12px 10px 10px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .card-wrap:hover .card-overlay { opacity: 1; }
+
+    .overlay-badge {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 2px 7px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 7px;
+      align-self: flex-start;
+    }
+
+    .overlay-badge.es-original { background: var(--badge-es); color: #fff; }
+    .overlay-badge.dubbed      { background: var(--badge-dub); color: #fff; }
+    .overlay-badge.unknown     { background: var(--badge-unknown); color: #fff; }
+
+    .overlay-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      line-height: 1.3;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+
+    .overlay-meta {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .overlay-genres {
+      font-size: 0.67rem;
+      color: var(--accent);
+      margin-bottom: 5px;
+      line-height: 1.3;
+    }
+
+    .overlay-plot {
+      font-size: 0.68rem;
+      color: #c8ccd8;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .overlay-rating {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #facc15;
+    }
+
+    .overlay-rating span {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* ── Empty / loading states ── */
+    .state-msg {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .state-msg .icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .loading-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .footer-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .footer-tmdb {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tmdb-logo {
+      height: 20px;
+      width: auto;
+    }
+
+    .footer-sep {
+      color: var(--border);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      :root {
+        --card-w: 120px;
+        --card-h: 180px;
+      }
+
+      .site-title { font-size: 1.5rem; }
+      .controls { padding: 10px 14px; }
+      main { padding: 20px 14px 40px; }
+      .section-title { font-size: 1rem; }
+      .scroll-btn { display: none; }
+      .filter-select { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════ HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="site-title">Puro Español</div>
+    <div class="site-tagline">Spanish-language films &amp; series across all major streaming services</div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════ CONTROLS -->
+<nav class="controls" aria-label="Filters">
+  <div class="controls-inner">
+
+    <!-- Service tabs -->
+    <div class="service-tabs" role="tablist" aria-label="Streaming service">
+      <button class="service-tab active" role="tab" aria-selected="true"  data-service="all">All</button>
+      <button class="service-tab"        role="tab" aria-selected="false" data-service="netflix">Netflix</button>
+      <button class="service-tab"        role="tab" aria-selected="false" data-service="disney-plus">Disney+</button>
+      <button class="service-tab"        role="tab" aria-selected="false" data-service="prime">Prime Video</button>
+      <button class="service-tab"        role="tab" aria-selected="false" data-service="max">Max</button>
+      <button class="service-tab"        role="tab" aria-selected="false" data-service="hulu">Hulu</button>
+      <button class="service-tab"        role="tab" aria-selected="false" data-service="peacock">Peacock</button>
+      <button class="service-tab"        role="tab" aria-selected="false" data-service="apple-tv-plus">Apple TV+</button>
+      <button class="service-tab"        role="tab" aria-selected="false" data-service="tubi">Tubi</button>
+    </div>
+
+    <!-- Stacked filter dropdowns -->
+    <div class="filter-row" aria-label="Filters">
+      <span class="filter-label">Filter:</span>
+      <select class="filter-select" id="type-select" aria-label="Filter by type">
+        <option value="all">All types</option>
+        <option value="movie">Movies</option>
+        <option value="series">Series</option>
+      </select>
+      <select class="filter-select" id="genre-select" aria-label="Filter by genre">
+        <option value="all">All genres</option>
+      </select>
+      <select class="filter-select" id="lang-select" aria-label="Filter by language">
+        <option value="all">All content</option>
+        <option value="es">ES Originals</option>
+        <option value="dubbed">Dubbed</option>
+        <option value="unknown">Unknown</option>
+      </select>
+    </div>
+
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════ MAIN -->
+<main id="main-content">
+  <!-- Loading state shown until fetch completes -->
+  <div id="loading-state" class="state-msg">
+    <div class="loading-spinner"></div>
+    <div>Loading titles…</div>
+  </div>
+
+  <!-- Movies section -->
+  <section class="content-section" id="movies-section" style="display:none">
+    <div class="section-header">
+      <h2 class="section-title">Movies <span class="count" id="movies-count"></span></h2>
+    </div>
+    <div class="carousel-outer">
+      <button class="scroll-btn left"  aria-label="Scroll left"  onclick="scrollCarousel('movies-track', -1)">&#8249;</button>
+      <div class="carousel-track" id="movies-track" role="list" aria-label="Movies"></div>
+      <button class="scroll-btn right" aria-label="Scroll right" onclick="scrollCarousel('movies-track',  1)">&#8250;</button>
+    </div>
+  </section>
+
+  <!-- Series section -->
+  <section class="content-section" id="series-section" style="display:none">
+    <div class="section-header">
+      <h2 class="section-title">Series <span class="count" id="series-count"></span></h2>
+    </div>
+    <div class="carousel-outer">
+      <button class="scroll-btn left"  aria-label="Scroll left"  onclick="scrollCarousel('series-track', -1)">&#8249;</button>
+      <div class="carousel-track" id="series-track" role="list" aria-label="Series"></div>
+      <button class="scroll-btn right" aria-label="Scroll right" onclick="scrollCarousel('series-track',  1)">&#8250;</button>
+    </div>
+  </section>
+
+  <!-- Empty state -->
+  <div id="empty-state" class="state-msg" style="display:none">
+    <div class="icon">🎬</div>
+    <div>No titles match your filters.</div>
+  </div>
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════════ FOOTER -->
+<footer>
+  <div class="footer-inner">
+
+    <!-- TMDB attribution -->
+    <div class="footer-tmdb">
+      <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer" aria-label="The Movie Database">
+        <img src="assets/tmdb-logo.svg" alt="TMDB logo" class="tmdb-logo" />
+      </a>
+    </div>
+
+    <span class="footer-sep">|</span>
+    <span>This product uses the TMDB API but is not endorsed or certified by TMDB.</span>
+
+    <span class="footer-sep">|</span>
+    <span>Streaming data powered by <a href="https://watchmode.com" target="_blank" rel="noopener noreferrer">Watchmode.com</a></span>
+
+    <span class="footer-sep">|</span>
+    <span id="footer-updated">Updated March 2026</span>
+
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════════ JAVASCRIPT -->
+<script>
+(function () {
+  'use strict';
+
+  // ── State ──────────────────────────────────────────────────────────────
+  let allTitles = [];          // full dataset loaded from titles.json
+  let filteredMovies = [];
+  let filteredSeries = [];
+
+  const state = {
+    service: 'all',
+    type:    'all',      // 'all' | 'movie' | 'series'
+    genre:   'all',
+    lang:    'all',      // 'all' | 'es' | 'dubbed'
+  };
+
+  const TMDB_IMG = 'https://image.tmdb.org/t/p/w342';
+
+  // ── DOM refs ───────────────────────────────────────────────────────────
+  const loadingState  = document.getElementById('loading-state');
+  const emptyState    = document.getElementById('empty-state');
+  const moviesSection = document.getElementById('movies-section');
+  const seriesSection = document.getElementById('series-section');
+  const moviesTrack   = document.getElementById('movies-track');
+  const seriesTrack   = document.getElementById('series-track');
+  const moviesCount   = document.getElementById('movies-count');
+  const seriesCount   = document.getElementById('series-count');
+  const typeSelect    = document.getElementById('type-select');
+  const genreSelect   = document.getElementById('genre-select');
+  const langSelect    = document.getElementById('lang-select');
+  const footerUpdated = document.getElementById('footer-updated');
+
+  // ── Data loading ───────────────────────────────────────────────────────
+  async function init() {
+    try {
+      const [titlesResp, metaResp] = await Promise.all([
+        fetch('data/titles.json'),
+        fetch('data/meta.json'),
+      ]);
+
+      if (!titlesResp.ok) throw new Error('titles.json not found');
+      allTitles = await titlesResp.json();
+
+      if (metaResp.ok) {
+        const meta = await metaResp.json();
+        if (meta.updated) {
+          footerUpdated.textContent = 'Updated ' + meta.updated;
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load data:', err);
+      allTitles = [];
+    }
+
+    populateGenres();
+    loadingState.style.display = 'none';
+    applyFilters();
+  }
+
+  // ── Genre list ─────────────────────────────────────────────────────────
+  function populateGenres() {
+    const genreSet = new Set();
+    allTitles.forEach(t => {
+      if (Array.isArray(t.genres)) {
+        t.genres.forEach(g => genreSet.add(g));
+      }
+    });
+
+    const sorted = Array.from(genreSet).sort();
+    sorted.forEach(g => {
+      const opt = document.createElement('option');
+      opt.value = g;
+      opt.textContent = g;
+      genreSelect.appendChild(opt);
+    });
+  }
+
+  // ── Filter logic ───────────────────────────────────────────────────────
+  function applyFilters() {
+    const { service, type, genre } = state;
+
+    const { lang } = state;
+
+    const filtered = allTitles.filter(t => {
+      // Service filter
+      if (service !== 'all') {
+        const services = t.services || (t.service ? [t.service] : []);
+        if (!services.includes(service)) return false;
+      }
+
+      // Type filter
+      if (type !== 'all' && t.type !== type) return false;
+
+      // Genre filter
+      if (genre !== 'all') {
+        if (!Array.isArray(t.genres) || !t.genres.includes(genre)) return false;
+      }
+
+      // Language filter
+      if (lang === 'es'      && t.original_language !== 'es')   return false;
+      if (lang === 'dubbed'  && (t.original_language === 'es'
+                             ||  t.original_language == null))  return false;
+      if (lang === 'unknown' && t.original_language != null)    return false;
+
+return true;
+    });
+
+    filteredMovies = filtered.filter(t => t.type === 'movie');
+    filteredSeries = filtered.filter(t => t.type === 'series');
+
+    renderSection('movies', filteredMovies);
+    renderSection('series', filteredSeries);
+
+    // Show / hide sections
+    const showMovies = type === 'all' || type === 'movie';
+    const showSeries = type === 'all' || type === 'series';
+
+    moviesSection.style.display = (showMovies && filteredMovies.length > 0) ? '' : 'none';
+    seriesSection.style.display = (showSeries && filteredSeries.length > 0) ? '' : 'none';
+
+    const nothingVisible =
+      (filteredMovies.length === 0 || !showMovies) &&
+      (filteredSeries.length === 0 || !showSeries);
+    emptyState.style.display = nothingVisible ? '' : 'none';
+  }
+
+  // ── Render a carousel section ──────────────────────────────────────────
+  function renderSection(kind, titles) {
+    const track     = kind === 'movies' ? moviesTrack   : seriesTrack;
+    const countEl   = kind === 'movies' ? moviesCount   : seriesCount;
+
+    countEl.textContent = titles.length > 0 ? titles.length + ' titles' : '';
+
+    // Diff-render: rebuild only if needed
+    track.innerHTML = '';
+
+    titles.forEach(title => {
+      track.appendChild(buildCard(title));
+    });
+  }
+
+  // ── Build a poster card ────────────────────────────────────────────────
+  function buildCard(t) {
+    const badgeClass  = t.original_language === 'es' ? 'es-original'
+                      : t.original_language == null  ? 'unknown'
+                      : 'dubbed';
+    const badgeLabel  = t.original_language === 'es' ? 'ES Original'
+                      : t.original_language == null  ? 'Unknown'
+                      : 'Dubbed';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'card-wrap';
+    wrap.setAttribute('role', 'listitem');
+    wrap.setAttribute('aria-label', t.title + (t.year ? ' (' + t.year + ')' : ''));
+
+    const article = document.createElement('article');
+    article.className = 'poster-card';
+
+    // Poster image or placeholder
+    let imgHtml;
+    if (t.poster_path) {
+      const src = TMDB_IMG + t.poster_path;
+      imgHtml = `<img class="poster-img" src="${escHtml(src)}" alt="${escHtml(t.title)} poster" loading="lazy" />`;
+    } else {
+      imgHtml = `<div class="poster-placeholder">
+        <div class="placeholder-icon">🎬</div>
+        <div>${escHtml(t.title)}</div>
+      </div>`;
+    }
+
+    // Corner badges (rendered outside overlay so visible before hover)
+    const langBadge = `<div class="lang-badge ${badgeClass}" aria-label="${badgeLabel}">${badgeLabel}</div>`;
+
+    // Overlay content
+    const genresStr  = Array.isArray(t.genres) && t.genres.length
+      ? t.genres.join(' · ')
+      : '';
+    const metaStr = t.year ? String(t.year) : '';
+
+    const ratingHtml = (t.imdb_rating && t.imdb_rating > 0)
+      ? `<div class="overlay-rating">★ ${Number(t.imdb_rating).toFixed(1)} <span>/ 10</span></div>`
+      : '';
+
+    const overlay = `
+      <div class="card-overlay" aria-hidden="true">
+        <div class="overlay-badge ${badgeClass}">${badgeLabel}</div>
+        <div class="overlay-title">${escHtml(t.title)}</div>
+        ${metaStr  ? `<div class="overlay-meta">${escHtml(metaStr)}</div>` : ''}
+        ${genresStr ? `<div class="overlay-genres">${escHtml(genresStr)}</div>` : ''}
+        ${t.plot_overview ? `<div class="overlay-plot">${escHtml(t.plot_overview)}</div>` : ''}
+        ${ratingHtml}
+      </div>`;
+
+    article.innerHTML = imgHtml + langBadge + overlay;
+    const titleLabel = document.createElement('div');
+    titleLabel.className = 'card-title-label';
+    titleLabel.textContent = t.title;
+    wrap.appendChild(article);
+    wrap.appendChild(titleLabel);
+    return wrap;
+  }
+
+  // ── Carousel scroll ────────────────────────────────────────────────────
+  window.scrollCarousel = function (trackId, direction) {
+    const track = document.getElementById(trackId);
+    if (!track) return;
+    const scrollAmount = Math.round(track.clientWidth * 0.75);
+    track.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+  };
+
+  // ── Event bindings ─────────────────────────────────────────────────────
+
+  // Service tabs
+  document.querySelectorAll('.service-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.service-tab').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      state.service = btn.dataset.service;
+      applyFilters();
+    });
+  });
+
+  // Filter selects
+  typeSelect.addEventListener('change',  () => { state.type  = typeSelect.value;  applyFilters(); });
+  genreSelect.addEventListener('change', () => { state.genre = genreSelect.value; applyFilters(); });
+  langSelect.addEventListener('change',  () => { state.lang  = langSelect.value;  applyFilters(); });
+
+  // ── Utility ────────────────────────────────────────────────────────────
+  function escHtml(str) {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // ── Kick off ───────────────────────────────────────────────────────────
+  init();
+
+}());
+</script>
+
+</body>
+</html>
