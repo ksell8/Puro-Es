@@ -11,3 +11,5 @@ wheels/
 
 # Temp files from atomic writes
 data/*.tmp
+
+.idea
