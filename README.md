@@ -15,6 +15,7 @@ I digress.  This was made with **Claude**. The plan is to clean it up so it can 
 ### Cool Improvements
 
 1) Allowing non-English original dubs.  Right now I went with English for a limited scope.  I'm limited to 1000 calls/month with WatchMode.
+2) Figure out how to view the full description.
 
 ### How to see the site
 
