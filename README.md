@@ -28,7 +28,7 @@ Or go to: https://trippyhippies.org/puro-es
 
 ### How to reuse the scripts for your lang of choice
 
-Edit the `es` to be what the fuck you want.  Delete my `data/titles.json`.
+Edit the `es` to be what the fuck you want.  Delete my `data/titles.json`.  You'll also need to update fetch_latin_spanish_translation() to be your own function.
 
 Then:
 
